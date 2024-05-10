@@ -27,7 +27,7 @@ USAGE:
  - select appropriate folder with ai files
  - enjoy
 
- CREDITS:
+CREDITS:
 Forked from Swasher
 
 **********************************************************/
@@ -58,12 +58,15 @@ if ( sourceFolder != null )
     {
         // Get the destination to save the files
         destFolder = Folder.selectDialog( 'Select the folder where you want to save the converted PDF files.', '~' );
-        //destFolder = sourceFolder;
+        
+        logPath = destFolder+'/log.txt';
+        logOpen(logPath);
+
         for ( i = 0; i < files.length; i++ )
         {
             sourceDoc = app.open(files[i]); // returns the document object
  
-            embed_links();  // Comment this function out if you wish NOT to embed links
+            embed_links(logPath);  // Comment this function out if you wish NOT to embed links
 
             // Call function getNewName to get the name and file to save the pdf
             targetFile = getNewName();
@@ -84,14 +87,38 @@ if ( sourceFolder != null )
     }
 }
 
+function logOpen(filepath) {
+    var logFile = File(filepath);
+    logFile.open('a'); // Open in append mode
+    logFile.writeln('This log was created by SV_AI2PDF.jsx (Adobe Illustrator)');
+    // Write the current date and time
+    logFile.writeln('Timestamp: ' + getCurrentTimestamp());
+}
+
+/* 
+Function to log a message to the text file
+filepath = full filepath to log file.  Example: H:\ProjectX\log.txt
+message = string, will be written to file
+*/
+function logMessage(filepath, message) {
+    var logFile = File(filepath); 
+    logFile.writeln(message);
+}
+
+function logClose(filepath) {
+    var logFile = File(filepath); 
+    logFile.close();
+}
+
+// Helper function to get the current timestamp
+function getCurrentTimestamp() {
+    var now = new Date();
+    var timestamp = now.toLocaleString(); // Format the timestamp as a string
+    return timestamp;
+}
 
 
-/*********************************************************
- 
-embed_links:  created by ChatGPT for Steven
- 
-**********************************************************/
-function embed_links() {
+function embed_links(logFile) {
     // Get all linked items in the document
     var linkedItems = sourceDoc.placedItems;
 
@@ -101,10 +128,10 @@ function embed_links() {
         try {
             linkedItem.embed();
             // If successful, log a message
-            $.writeln("Embedded: " + linkedItem.file.name);
+            logMessage(logFile, "Embedded: " + linkedItem.file.name);
         } catch (e) {
             // If embedding fails, log an error message
-            $.writeln("Error embedding: " + linkedItem.file.name);
+            logMessage(logFile, "Error embedding: " + linkedItem.file.name);
         }
     }
 }
