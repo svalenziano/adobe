@@ -60,13 +60,17 @@ if ( sourceFolder != null )
         destFolder = Folder.selectDialog( 'Select the folder where you want to save the converted PDF files.', '~' );
         
         logPath = destFolder+'/log.txt';
-        logOpen(logPath);
+        var logFile = File(logPath);
+        logFile.open('a'); // Open in append mode
+        logFile.writeln('This log was created by SV_AI2PDF.jsx (Adobe Illustrator)');
+        // Write the current date and time
+        logFile.writeln('Timestamp: ' + getCurrentTimestamp());
 
         for ( i = 0; i < files.length; i++ )
         {
             sourceDoc = app.open(files[i]); // returns the document object
  
-            embed_links(logPath);  // Comment this function out if you wish NOT to embed links
+            embed_links(logFile);  // Comment this function out if you wish NOT to embed links
 
             // Call function getNewName to get the name and file to save the pdf
             targetFile = getNewName();
@@ -79,6 +83,7 @@ if ( sourceFolder != null )
 
             sourceDoc.close();
         }
+        logFile.close();
         alert( 'Files are saved as PDF in ' + destFolder );
     }
     else
@@ -87,28 +92,15 @@ if ( sourceFolder != null )
     }
 }
 
-function logOpen(filepath) {
-    var logFile = File(filepath);
-    logFile.open('a'); // Open in append mode
-    logFile.writeln('This log was created by SV_AI2PDF.jsx (Adobe Illustrator)');
-    // Write the current date and time
-    logFile.writeln('Timestamp: ' + getCurrentTimestamp());
-}
-
 /* 
 Function to log a message to the text file
-filepath = full filepath to log file.  Example: H:\ProjectX\log.txt
-message = string, will be written to file
+    log = log object creaed with File()
+    message = string, will be written to file
 */
-function logMessage(filepath, message) {
-    var logFile = File(filepath); 
-    logFile.writeln(message);
+function logMessage(logObject, message) { 
+    logObject.writeln(message);
 }
 
-function logClose(filepath) {
-    var logFile = File(filepath); 
-    logFile.close();
-}
 
 // Helper function to get the current timestamp
 function getCurrentTimestamp() {
@@ -118,7 +110,7 @@ function getCurrentTimestamp() {
 }
 
 
-function embed_links(logFile) {
+function embed_links(logObject) {
     // Get all linked items in the document
     var linkedItems = sourceDoc.placedItems;
 
@@ -128,10 +120,10 @@ function embed_links(logFile) {
         try {
             linkedItem.embed();
             // If successful, log a message
-            logMessage(logFile, "Embedded: " + linkedItem.file.name);
+            logMessage(logObject, "Embedded: " + linkedItem.file.name);
         } catch (e) {
             // If embedding fails, log an error message
-            logMessage(logFile, "Error embedding: " + linkedItem.file.name);
+            logMessage(logObject, "Error embedding: " + linkedItem.file.name);
         }
     }
 }
