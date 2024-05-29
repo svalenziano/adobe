@@ -44,8 +44,9 @@ var destFolder, files, sourceDoc, targetFile, pdfSaveOpts;
 /**********************************************************
 SETTINGS!
 **********************************************************/
-var useOpenFiles = true;
+var useOpenFiles = yes_or_no("Use open documents?  They will be saved as PDFs and closed.")
 var embed = true;
+var closeWhenDone = false
 
 /**********************************************************
 MAIN LOOP
@@ -56,7 +57,7 @@ if (useOpenFiles == false) {
     if ( files.length > 0 )
     {
         // Get the destination to save the files
-        destFolder = Folder.selectDialog( 'Select the folder where you want to save the converted PDF files.', '~' );
+        destFolder = Folder.selectDialog( 'DESTINATION FOLDER', '~' );
         
         logFile = createLog(destFolder+'/log.txt')
 
@@ -91,21 +92,25 @@ if (useOpenFiles == false) {
 
 else {
     if (app.documents.length > 0 ) {
-
+        
         // Get the folder to save the files into
         var destFolder = null;
-        destFolder = Folder.selectDialog( 'Select folder for PDF files.', '~' );
+        destFolder = Folder.selectDialog( 'DESTINATION FOLDER', '~' );
         
         if (destFolder != null) {
             var pdfSaveOptions, i, sourceDoc, targetFile;	
             
+            // closeWhenDone = yes_or_no("Close PDFs when done?")  // Not working :(
+
             logObject = createLog(destFolder + '/log.txt')
 
             
             // Get the PDF options to be used
             pdfSaveOptions = getPDFOptions();
+
+            var docCount = app.documents.length;
                                     
-            for ( i = 0; i < app.documents.length; i++ ) {
+            for ( i = 0; i < docCount; i++ ) {
                 sourceDoc = app.documents[i]; // returns the document object
                 logMessage(logObject, sourceDoc.name)
 
@@ -118,8 +123,11 @@ else {
                 
                 // Save as pdf
                 sourceDoc.saveAs( targetFile, pdfSaveOptions );
-                // close the doc so you don't have to close a bunch of PDFs manually
-                sourceDoc.close();
+                
+                if (closeWhenDone == true){
+                    // Close so you don't have a bunch of open (unsaved) documents to deal with
+                    sourceDoc.close();
+                }
             }
             logObject.close();
             alert( 'Files are saved as PDF in ' + destFolder );
@@ -134,6 +142,18 @@ else {
 /**********************************************************
 FUNCTIONS
 **********************************************************/
+
+function yes_or_no(message){
+    var userResponse = confirm(message);
+    if (userResponse) {
+        // User clicked 'Yes' (OK)
+        return true
+    } else {
+        // User clicked 'No' (Cancel)
+        return false
+    }
+}
+
 
 /*
 This function is from the sample script that ships with Illustrator
