@@ -1,7 +1,8 @@
 /**********************************************************
 
-WIP:
-PROVIDING THE ABILITY TO WORK WITH EITHER OPENED FILES *OR* A FOLDER FULL O FILES, SEE #LOA
+WIP / TODO:
+ -[] PROVIDING THE ABILITY TO WORK WITH EITHER OPENED FILES *OR* A FOLDER FULL O FILES, SEE #LOA
+ -[] 
 
 
 DESCRIPTION
@@ -89,10 +90,35 @@ if (useOpenFiles == false) {
         alert( 'No matching files found' );
     }
 }
-
 else {
     if (app.documents.length > 0 ) {
         
+        
+        /*
+        TODO
+
+        #LOA - I realized that I don't know how to do string interpolation in 
+        Javascript, and I shouldn't be spending my time doing that right now.
+
+        If any of the currently open files are unsaved, display a dialogue:
+            - List of unsaved documents
+            - "Program will now exit, please save your docs and try again"
+        I don't want to allow ppl to 'proceed anyway' bc I think it will lead to ppl just
+        blindly clicking thru dialogues and 
+        
+        
+        
+        
+        var unsavedDocs = getUnsavedDocuments();
+        var message = //tktk
+        
+        if (unsavedDocs.length > 0){
+            showMessageDialog()
+            
+        }
+        */
+
+
         // Get the folder to save the files into
         var destFolder = null;
         destFolder = Folder.selectDialog( 'DESTINATION FOLDER', '~' );
@@ -152,6 +178,47 @@ function yes_or_no(message){
         // User clicked 'No' (Cancel)
         return false
     }
+}
+
+function getUnsavedDocuments() {
+    var unsavedDocs = [];
+    
+    // Check if any documents are open
+    if (app.documents.length > 0) {
+        // Loop through the open documents
+        for (var i = 0; i < app.documents.length; i++) {
+            var doc = app.documents[i];
+            // Check if the document has unsaved changes
+            if (doc.saved === false) {
+                // Get the name of each unsaved document
+                unsavedDocs.push(doc.name);
+            }
+        }
+    } else {
+        // No documents are open
+        unsavedDocs.push("No documents are currently open.");
+    }
+    
+    return unsavedDocs;
+}
+
+function showMessageDialog(message, title) {
+    // Create a new dialog
+    var dialog = new Window('dialog', title);
+    
+    // Add a static text element for the message
+    dialog.add('statictext', undefined, message, {multiline: true});
+    
+    // Add an 'OK' button
+    var okButton = dialog.add('button', undefined, 'OK', {name: 'ok'});
+    
+    // Define the button click behavior
+    okButton.onClick = function() {
+        dialog.close();
+    };
+    
+    // Show the dialog
+    dialog.show();
 }
 
 
@@ -242,15 +309,16 @@ function getCurrentTimestamp() {
 // Embed links and log to file
 function embed_links(logObject,sourceDoc) {
     // Get all linked items in the document
+    // Assign to new variable in order to avoid iterating while mutating
     var link_count = sourceDoc.placedItems.length;
     if (link_count > 0) {
         // logMessage(logObject, "Embedding " + link_count + " links...");
         var linkedItems = sourceDoc.placedItems;
     
         // Loop through each linked item and embed it
-        for (var i = 0; i < linkedItems.length; i++) {
-            var linkedItem = linkedItems[i];
+        for (var i = 0; i < link_count; i++) {
             try {
+                var linkedItem = linkedItems[0];
                 linkedItem.embed();
                 // If successful, log a message
                 logMessage(logObject, "Embedded: " + linkedItem.file.name);
