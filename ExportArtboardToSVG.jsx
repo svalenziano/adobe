@@ -1,9 +1,12 @@
-// ExportArtboardsToSVG.jsx
-// Proof of concept for Adobe Illustrator CS4.
-// Exports every artboard to SVG into an "export" folder that sits in the
-// same directory as the .ai file. Existing files are overwritten.
-//
-// To run: File > Scripts > Other Script...  (or drag onto Illustrator)
+/*
+KNOWN LIMITATIONS:
+  - Poor support for transparency masks
+
+WORKS FOR:
+  - Symbols
+  - Clipping masks
+*/
+
 
 (function () {
   if (app.documents.length === 0) {
@@ -38,6 +41,12 @@
 
   var options = new ExportOptionsSVG();
   options.embedRasterImages = true;
+  options.coordinatePrecision = 4;
+  options.preserveEditability = false;
+  options.fontType = SVGFontType.OUTLINEFONT; 
+  options.cssProperties = SVGCSSPropertyLocation.STYLEATTRIBUTES;
+  options.documentEncoding = SVGDocumentEncoding.UTF8;
+  options.includeFileInfo = false;
 
   var count = doc.artboards.length;
 
