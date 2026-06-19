@@ -5,4 +5,9 @@ I've created these scripts for my use, but I figured I should share them in case
 
 ## Windows
 `git clone` or download into the scripts folder:
+
+```
 C:\Program Files (x86)\Adobe\Adobe Illustrator CS4\Presets\en_US\Scripts
+```
+
+Due to security restrictions, You may need to git clone to a different directory and copy-paste into the directory
