@@ -16,6 +16,16 @@ function slugify(str) {
   return slug;
 }
 
+function getNonPrintingLayers(doc) {
+  var layers = [];
+  for (var i = 0; i < doc.layers.length; i++) {
+    if (!doc.layers[i].printable) {
+      layers.push(doc.layers[i]);
+    }
+  }
+  return layers;
+}
+
 function findArtboardNameLayer(doc) {
   for (var i = 0; i < doc.layers.length; i++) {
     if (doc.layers[i].name === "artboard_name") {
@@ -148,6 +158,16 @@ function getRawArtboardNames(doc) {
   var originalFile = doc.fullName;
   var aiSaveOptions = new IllustratorSaveOptions();
 
+  // exportFile honors layer visibility, not the "Print" checkbox, so hide
+  // any non-printing layers for the duration of the export and restore
+  // their visibility afterward.
+  var nonPrintingLayers = getNonPrintingLayers(doc);
+  var originalVisibility = [];
+  for (var i = 0; i < nonPrintingLayers.length; i++) {
+    originalVisibility.push(nonPrintingLayers[i].visible);
+    nonPrintingLayers[i].visible = false;
+  }
+
   for (var i = 0; i < count; i++) {
     // Make this artboard the active one before exporting.
     doc.artboards.setActiveArtboardIndex(i);
@@ -156,6 +176,10 @@ function getRawArtboardNames(doc) {
 
     // exportFile overwrites an existing file of the same name.
     doc.exportFile(outFile, ExportType.SVG, options);
+  }
+
+  for (var i = 0; i < nonPrintingLayers.length; i++) {
+    nonPrintingLayers[i].visible = originalVisibility[i];
   }
 
   // Restore the document as the original .ai file so Illustrator doesn't
