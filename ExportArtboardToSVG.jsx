@@ -36,8 +36,8 @@
   // Base name = the .ai filename without its extension.
   var baseName = doc.name.replace(/\.[^\.]+$/, "");
 
-  // Default SVG export options. Keeping it bare for the proof of concept.
   var options = new ExportOptionsSVG();
+  options.embedRasterImages = true;
 
   var count = doc.artboards.length;
 
