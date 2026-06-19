@@ -26,6 +26,48 @@ function getNonPrintingLayers(doc) {
   return layers;
 }
 
+function isInUneditableAncestor(item) {
+  // Walks up through groups and (sub)layers alike - a locked or invisible
+  // ancestor at any level blocks edits to its descendants. Layer exposes
+  // .visible; GroupItem exposes .hidden instead.
+  var node = item.parent;
+  while (node && node.typename !== "Document") {
+    if (node.locked) {
+      return true;
+    }
+    if (node.typename === "Layer" ? !node.visible : node.hidden) {
+      return true;
+    }
+    node = node.parent;
+  }
+  return false;
+}
+
+function getOutOfBoundsItems(doc, rect) {
+  // Items with zero overlap with the artboard rect ([left, top, right,
+  // bottom]) - these are the ones to hide so they don't bleed into the
+  // SVG export, which doesn't crop to the artboard on its own.
+  var items = [];
+  for (var i = 0; i < doc.pageItems.length; i++) {
+    var item = doc.pageItems[i];
+    if (item.hidden || item.locked || isInUneditableAncestor(item)) {
+      continue;
+    }
+
+    var bounds = item.geometricBounds; // [left, top, right, bottom]
+    var noOverlap =
+      bounds[2] < rect[0] ||
+      bounds[0] > rect[2] ||
+      bounds[1] < rect[3] ||
+      bounds[3] > rect[1];
+
+    if (noOverlap) {
+      items.push(item);
+    }
+  }
+  return items;
+}
+
 function findArtboardNameLayer(doc) {
   for (var i = 0; i < doc.layers.length; i++) {
     if (doc.layers[i].name === "artboard_name") {
@@ -172,10 +214,21 @@ function getRawArtboardNames(doc) {
     // Make this artboard the active one before exporting.
     doc.artboards.setActiveArtboardIndex(i);
 
+    // exportFile doesn't crop to the artboard, so hide anything that falls
+    // entirely outside it for the duration of this export, then restore.
+    var outOfBoundsItems = getOutOfBoundsItems(doc, doc.artboards[i].artboardRect);
+    for (var j = 0; j < outOfBoundsItems.length; j++) {
+      outOfBoundsItems[j].hidden = true;
+    }
+
     var outFile = new File(exportFolder + "/" + fileNames[i]);
 
     // exportFile overwrites an existing file of the same name.
     doc.exportFile(outFile, ExportType.SVG, options);
+
+    for (var j = 0; j < outOfBoundsItems.length; j++) {
+      outOfBoundsItems[j].hidden = false;
+    }
   }
 
   for (var i = 0; i < nonPrintingLayers.length; i++) {
